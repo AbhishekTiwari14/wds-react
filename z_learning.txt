@@ -249,4 +249,29 @@ export function useFetch(url) {
 
 // in App.jsx: const { data, isLoading, isError } = useFetch('https://placeholder.json/users')
 
-(23) 
+.........................................................................................................
+
+FORMS:
+...........
+
+(23) onSubmit: e.preventDefault() : default=> it sends a request to url we're currently on
+
+(24) one-way data flow in react: data can flow from Parent->Child but not V.V. ie, parent can send data down to child component as props, and hence, child can get the access/readonly to parent's state, but child cannot modify the parent state directly.
+-> If we want to modify a parent's state in child component, we can only do so by calling a fxn. defined in parent's component: 
+    Ex. Parent(){
+            const [data, setData] = useState("Initial Text")
+            function updateData(newText){
+                setData(newText)
+            }
+            return (
+                <Child data={data} updateFxn={updateData}>
+            )
+        }
+
+        Child({data, updateFxn}){
+            return(
+                <button onClick={() => updateFxn("New Updated Text")}> Update Text </button>
+            )
+        }
+    
+(25) React Hook Form(form library): 
