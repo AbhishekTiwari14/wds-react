@@ -1,0 +1,252 @@
+PART 1/2 -> BASICS: 
+
+
+SETUP:
+..............
+
+(1)Installing React: ->(a) npm create vite@latest //(faster) // bundler = vite
+                     ->(b) npx create-react-app  //(slow) // bundler = webpack
+
+(2) Files:  
+    -> main.js(or index.js) file hooks up (plugs in) all of our react/js code into 'root' div of public/index.html Files.
+    -> app.js is where we write our react code
+
+..........................................................................................................
+
+BASIC COMPONENTS:
+...................
+
+(3) JSX Basics: 
+-> <h1 id="greet"> Hello </h1> ->[GETS CONVERTED TO]-> React.createElement("h1", {id: "greet"}, "Hello");  
+-> anything written inside {code..} is a javscript expression. So, {{code..}} => object. & css style can be passed as js object. ex. <div style={{backgroundColor: "red"}}> Hello </div>.
+
+(4) Props: -> are a way to pass data from parent->child component
+           -> Props = properties given to a tag/component.
+           Ex. App.js: <HeaderComponent name="Abhishek" />
+               HeaderComponent.jsx: ({ name }){
+                    return <h1>Hello {name} </h1>
+               }
+            -> children prop: special prop. anything that we put b/w <C1> code.. </C1> in any other component can be accessed by C1 as {children}.
+            Ex. App.js: <Header> 
+                            <div> Hello Abhishek, wellcome here</div>
+                        <Header>
+                Header.jsx: ({ children }){
+                                return {children}
+                } 
+
+(5) Declarative(react) vs Imperative(js) type of coding:
+    -> Declarative: declaring how what your code should look like based on specefic data that's passed
+    -> Imperative: step-by-step process, do this , then do this ... ex. create h1, append in div ....
+
+..........................................................................................................
+
+BASIC STATEFUL COMPONENTS(useState):
+.......................................
+
+(6) whenever any state changes, the entire component(along with its child components) that is using that state gets re-rendered along with the state.
+
+(7) (See 1->Incrementby2.jsx) Suppose we have a state->age & we want to increase it by 2 whenever a button is clicked. Then:
+        const [age, setAge] = useState(0);
+        const handleClick = () => {
+            setAge(age+1);
+            setAge(age+1);
+        }
+     return <button onClick={handleClick}>Click</button>
+
+     -> when we click this button, we will see that the age increases by 1 only. This is bcoz react batches state updates when made in quick succession & state will get updated only after the component is re-rendered.
+
+     sol: using prevState: const handleClick = () => {
+                                setAge(prevAge => prevAge + 1); // First update  
+                                setAge((prevAge) => {
+                                   return prevAge + 1; // Second update; Note: both lines are same
+                                })    
+                            }
+
+..........................................................................................................
+
+COMPONENT LIFECYCLE:
+.............................
+
+(8) VIRTUAL DOM:
+Virtual DOM in React is an abstraction of the actual DOM. It is a lightweight copy of the real DOM that React maintains to optimize rendering and improve performance. Here’s how it works and why it's important:
+
+    -> Representation: When you create React components, React creates a virtual representation of the UI in memory, known as the Virtual DOM. This representation consists of a tree of React elements.
+
+    -> Reconciliation: When the state of a component changes, React updates the Virtual DOM instead of the real DOM immediately. It then compares the new Virtual DOM with the previous version (this process is called "reconciliation").
+
+    -> Diffing: React uses an efficient algorithm to determine what has changed between the two Virtual DOM trees. It identifies the differences (or "diffs") and figures out the minimal set of changes needed to update the real DOM.
+
+    -> Batch Updates: Once React has identified the changes, it updates the real DOM in a batch process, making only the necessary updates. This minimizes the number of direct manipulations to the real DOM, which can be slow and resource-intensive.   
+
+(9) component Lifecycle: 3 steps: (1) Mounting(Initial render) (2) Updates(re-render): happens when some state of the component or the parent component changes. (3) Unmounting
+
+(10) Pure fxns. = fxns. which satisfy 2 rules: 1. Deterministic(same I/P=> same O/P) & 2. No side effects: => does not change any external state
+
+(11) UseEffect Hook: performs side effects. useEffect(()=> fxn., []) : takes up a fxn. & a dependency array as arg. and calls the fxn. whenever any element in the dependency array changes.
+    -> if no array is passed(not even empty array): fxn. will be called whenever component is re-rendered + on Initial render
+    -> if empty array is passed: fxn. will be called only on the Initial render(mounting of component)
+    -> if we pass an object inside dependency array, then useEffect will run every time the component re-renders, regardless of whether the contents of the object have changed. This is because, in js objects are reference types & on every render, since object is alloted new memory, reference to object changes.
+    -> when we are using an eventListener inside useEffect, it will create a new eventListener everytime the fxn is called, without clearing/Unmounting the older eventListener(s). To, unmount, write code:
+    useEffect(()=>{
+        const handlerFxn = () => {..some code}
+        document.addEventListener("click", handlerFxn)
+        return () => {
+            document.removeEventListener("click", handlerFxn)
+        }
+    },[a,b,c])
+
+(12) (Q) Implement debouncing: there is a state 'name' which takes up user input as its value. We want to console.log(name) after every 1 sec that name changes. Ex. user types "a"@t=0s "ab"@t=0.4s "abh"@0.7s "abhi"@0.95s "abhis"@1.2s "abhish"@1.4s ""abhishe"@1.7s and "abhishek" @1.8s
+then we will conosole log only "abhi" @t=1s and "abhishek" @t=2s and not anything in-b/w(ie, we don't clog a or ab or abh or abhis, etc.).
+    (sol) usual approach => useEffect(()=> setTimeout(clog), [name]) but this will not work. (this will delay clogs by 1s each but will log "a", then "ab", then "abc" and so on). So, what we need to do is to unmount the setTimeout if name has changed within 1sec.
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            console.log(name)
+        }, 1000)
+        return () => {
+            clearTimeout(timeout)
+        }
+    }, [name])
+
+(13) Class Components Lifecycle Methods:
+
+(14) StrictMode: in main.jsx(or index.jsx):    
+        createRoot(document.getElementById("root")!).render(
+            <StrictMode>
+                <App />
+            </StrictMode>
+        )
+    
+    -> It simulates mounting->Unmounting->Remounting of component, and hence helps detect unnecessary side effects, etc.
+
+(15) Fetching data from api:
+    (a) Using fetch:
+    const [users, setUsers] = useState();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState();
+
+    useEffect(()=>{
+        setLoading(true)
+        setError(undefined)
+        const controller = new AbortController()
+        fetch("https://jsonplaceholder/users", { signal: controller.signal })
+        .then(res => {
+            if (res.status === 200) return res.json()
+            else return Promise.reject(res)
+        })
+        .then(data => {
+            setUsers(data)
+        })
+        .catch(e => {
+            if(e?.name === "AbortError") return
+            setError(e)
+        })
+        .finally(() => setLoading(false))
+
+        return (()=>{
+            controller.abort()
+        })
+    },[])
+
+    (b) using Axios(recommended):
+
+..........................................................................................................
+
+ADVANCED COMPONENTS:
+........................
+
+(16) Conditional Rendering: 
+    (a) <div>{isLoading && <LoadingComponent />}</div>
+    (b) {isLoading? ( 
+            <LoadingComponent />
+            ) : (
+            <UserDataComponent />
+            )
+        }
+
+(17) Spread operator: suppose we have [users, setUsers] state in app.js, which is an array of objects where each object has props: name, age, address, etc. We have a userData Component to display data of a particular user: ({name, age, address}) 
+        <div> {name}</div> 
+        <div> {age}</div> 
+        <div> {address}</div> 
+
+in app.js: we want to pass these props when using UserData component within it.
+    M1: <UserData name={user.name} age={user.age} address = {user.address} />
+
+    M2: <UserData {...user} />
+
+.........................................................................................................
+
+BASIC HOOKS:
+........................
+
+(18) Hooks must be put at top(lines) of functional component bcoz of how react tracks them. React relies on the order in which hooks are called to maintain the state and side effects correctly. If hooks are called conditionally or within loops, the order of hooks might change between renders, leading to bugs and inconsistent behavior.
+
+(19) useRef Hook: has 2 use-cases: 
+    (1) Mutable Values: Store values that need to persist without triggering re-renders.
+        const data = useRef("Abhishek") //Abhishek = default value
+        clog(data.current) //.current will return current value of useRef var.
+    -> now if lets say we are changing this 'data' as user input changes. Then it will not force component to re-render, instead, the updated value will be stored & reflect on UI when the component re-renders(due to some state change).
+
+    -> if we update the value of "state" var. (ex. using button onclick), then its value will change & also reflect the same on UI(component re-renders);
+    -> if we update the value of a "let" var. (ex. using button onclick), then its value will change but won't reflect the same on UI(component does'nt re-render); also finally, when the component re-renders(due to some state/prop change), "let" var. ki value will not persist and it will take back its initial value.
+    -> if we update the value of a "ref" var. (ex. using button onclick), then its value will change but won't reflect the same on UI(component does'nt re-render); also finally, when the component re-renders(due to some state/prop change), "ref" var. ki value will persist and it will finally reflect on the UI.
+
+    (2) as a Reference to DOM Elements: Use useRef to interact with DOM nodes: 
+        Ex. const inputRef = useRef()
+            <input ref={inputRef} value={value}/>
+        // now, inputRef.current = <input value={value}/> tag itself & inputRef.current.value = current input value 
+
+(20) useMemo Hook: memoizes/caches the "result" of a function call and returns the cached result when the dependencies have not changed.
+    -> useMemo(fxn., []);
+    ex. const filteredData = useMemo(() => {
+            return data.filter(n => n.includes(query))
+        },[query])
+    
+    -> Note: It only memoizes the last queried data
+
+(21) useCallback Hook: caches fxn. (react recreates all the fxns. on re-renders, so caching a fxn. can be done using this hook). This is useful when passing functions as props to child components.
+    -> useCallback(fxn., []);
+    -> note: useCallback caches the whole fxn. while useMemo caches only the return value of a fxn. call
+
+(22) Custom Hooks: We can create a custom hook(fxn.) by combining built-in hooks & adding our logic.
+ Ex. we can create useFetch hook to handle api responses: //in useFetch.jsx: 
+export function useFetch(url) {
+  const [data, setData] = useState()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+  const controller = new AbortController()
+  useEffect(() => {
+    setData(undefined)
+    setIsLoading(true)
+    setIsError(false)
+
+    fetch(url)
+      .then((res) => {
+        if (res.status === 200) {
+          return res.json()
+        }
+        return Promise.reject(res)
+      })
+      .then((val) => setData(val))
+      .catch((e) => {
+        if (e?.name === "AbortError") return
+        setIsError(true)
+      })
+      .finally(() => {
+        if (controller.signal.aborted) return
+        setIsLoading(false)
+      })
+
+    return (
+      () => {
+        controller.abort()
+      },
+      [url]
+    )
+  })
+ return { data, isLoading, isError }
+}
+
+// in App.jsx: const { data, isLoading, isError } = useFetch('https://placeholder.json/users')
+
+(23) 

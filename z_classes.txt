@@ -1,0 +1,108 @@
+Creating Fxnl. Component -> RAFCE
+Creating Class Based Component -> 
+    import React from "react"
+    class Header extends React.Component {
+        render(){
+            return(
+                <h1> Header </h1>
+                <h1> Name: {this.props.name} </h1>
+                JSX Code
+            )
+        }
+    }
+    export default Header
+
+Using Props : We use this.props.{propName}, see line 8 and use it as <Header name={"Abhishek"}/>
+
+-> UseState in CBCs: We initialize variables in constructor & we use this.setState({}) to cahnge state of variable(s):
+    class Header extends React.Component{
+        constructor(props){
+            super(props);
+            this.state = {
+                x: 0,
+                y: 100, 
+                z: 10000,
+            }
+        }
+        render(){
+            <h1>X:{this.state.x} </h1>
+            <h1>Y: {this.state.y} </h1>
+            <h1>Z: {this.state.z} </h1>
+            <button onClick: {() => {
+                this.setState({
+                    x: 1,
+                })
+            }}> Change X </button> //this will change only x, y & z won't change 
+            <button onClick: {() => {
+                this.setState({
+                    y: 99,
+                    z: 11111,
+                })
+            }}> Change Y & Z </button> //this will change both y & z but x will not change 
+        }
+    }
+
+-> constructor is called before render(), so 
+    constructor(){clog("constructor called")} 
+    render(){
+        clog("render method called")
+    }
+    will give: "constructor called" 
+               "render method called"    //in console
+
+->UseEffect in CBCs: componentDidMount() method is best place to make api calls bcoz this method is called just after render() method (similar to useEffect which is called just after initial app render)
+    componentDidMount(){
+        //Make api call
+    }
+
+-> React LifeCycle methods: constructor(), render() and componentDidMount() are 3 essential class methods. These are called in order 1) constructor() -> then 2) render() -> then 3) componentDidMount() 
+-> LifeCycle Methods are parsed in 2 phases: 1) Render Phase: Involves constructor() & render() methods; 2) Commit Phase: Involves componentDidMount(), it is slower as it involves DOM updation.
+-> When sibling Components are called: Render Phase is batched together. 
+
+Ex.) Parent Component{
+        render() {
+            <firstChildComponent />
+            <secondChildComponent />
+        }
+    }
+
+then order will be: Parent constructor() -> Parent render() -> firstChild constructor() -> firstChild render() -> secondChild constructor() -> secondChild render() -> firstChild componentDidMount() -> secondChild componentDidMountomponent() -> parent componentDidMount().
+
+-> async componentDidMount() can be made async(ex. when api is called inside componentDidMount), and it will affect LifeCycle as: 
+Ex.) firstChild ka componentDidMount is async, then order will be: 
+Parent constructor() -> Parent render() -> firstChild constructor() -> firstChild render() -> secondChild constructor() -> secondChild render() -> secondChild componentDidMountomponent() -> parent componentDidMount() -> -> firstChild async componentDidMount()
+
+
+Here's an overview of the React lifecycle methods for class-based components:
+1) Mounting Phase:
+
+    a) constructor(): This method is called before the component is mounted. It is used for initializing state and binding event handlers.
+
+    b) render(): This method is required and is called to render the component. It returns the JSX representation of the component.
+
+    -> DOM is mounted on the page[Initial Render] (images/api data still not been recieved)
+
+    c) componentDidMount(): This method is called after the component is mounted to the DOM, ie, after app initial render. It is commonly used for making API requests or interacting with the DOM.
+
+2) Updating Phase: Wheneve state change , etc., happens 
+
+    a) render(): Same as in the mounting phase, the render method is called to "re-render the component".
+
+    b) componentDidUpdate(prevProps, prevState): This method is called after the component is re-rendered due to changes in props or state. It is commonly used for updating the DOM in response to prop or state changes.
+
+3) Unmounting Phase: To do cleanup When we move to other page (ex. when using setInterval, setTimeout for a particular page, we don't want it to continue when we move to other page)
+
+    a) componentWillUnmount(): This method is called just before the component is unmounted from the DOM. It is used for cleanup tasks such as removing event listeners or canceling network requests.
+
+-> For Unmounting in fxnl. components, we use return : ex.) 
+
+Fxnl. Component:                                    CBC: 
+useEffect(()=> {                                    componentDidUpdate(){
+    const timer = setInterval(()=> {                    this.timer = setInterval(()=> {
+        console.log("Wooohoo");                             console.log("Header Component Updated")
+    }, 1000)                                            }, 1000)
+                                                    }
+    return () => {                                              
+        clearInterval(timer);                       componentWillUnmount(){
+    }                                                   clearTimeout(this.timer);
+  }, [])                                            }
