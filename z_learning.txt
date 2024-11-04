@@ -274,4 +274,70 @@ FORMS:
             )
         }
     
-(25) React Hook Form(form library): 
+(25) React Hook Form(form library):
+
+.........................................................................................................
+
+CONTEXT API:
+...................................
+
+(26) Prop Drilling: Data can only be sent down heirarchially(as props) : P->C->GC->GGC->... (we cannot directly send data from P->GGC). 
+Solution: Create global state/context that can be accessed/modified directly by any component.
+
+(27) useReducer Hook(): Is used to create a state along with a reducer fxn. that handles how the state updates/modifies.
+    const [state, dispatch] = useReducer(reducer, initialState)
+    -> it takes up reducer fxn & initialState(initial value of state var.) as args. and returns state(ie, state var.) & dispatch fxn.
+    -> When we call the dispatch fxn. (with args.: action.type & action.payload)  -> it dispatches an action, which calls the reducer fxn with given args.
+    -> Ex. we want to create a counter with increment and decrement buttons, with initial value = 0
+           (we also want a button which on click will add 10 to the counter value)
+        
+        //reducer fxn. is often put outside of export function component(){}
+        function reducer(count, action){  //or (count, {type, payload})
+            switch(action.type){
+                case "Decrement": return count-1     //note: completely overwrites the state
+                case "Increment": return count+1
+                case "AddTen": return count+ action.payload.value
+                default: return count
+            }
+        }
+        
+        export function CounterComponent(){
+            const [count, dispatch] = useReducer(reducer, {initialCount: 0})
+
+            return(
+                <button onClick = {() => dispatch({type: "Decrement"})}> - </button>
+                <button onClick = {() => dispatch({type: "Increment"})}> + </button>
+                <button onClick = {() => dispatch({type: "AddTen", payload: {value: 10}})}> Add 10 </button>
+            ) 
+        }
+
+    -> useReducer fxn. can take up a 3rd arg. which is a callback fxn.(init fxn.) which is used to initialize the state in a more complex way than simply providing an initial state value.
+        const [state, dispatch] = useReducer(reducer, initialArg, init?)
+    -> note: if the init fxn. requires an arg., you can put that arg. in place of initialArg, else you can put null in place of initialArg if you are using init fxn.
+        
+
+(28) useContext Hook: is used to share the state b/w all the components.
+    ex. Suppose we have a isDarkMode state (a state that stores if the app is in dark or light mode) and a fxn to toggle the mode. We have P->C->GC;
+    In P: const [isDarkMode, setIsDarkMode] = useState(false)
+          function toggleTheme(){
+            setIsDarkMode(prevMode => !prevMode)
+          }
+    
+    (S1) in P: create & export context outside the component: export const ThemeContext = createContext()
+
+    (S2) Wrap the P component with ThemeProvider & pass all the data(state, fxn. to change state) in value prop which you want to share: <ThemeProvider.Provider value = {{isDarkMode, toggleTheme}}>P</ThemeProvider>
+
+    (S3)  In GC: you can access theses values as: const value = useContext(ThemeContext);
+            // now, value.isDarkMode & value.toggleTheme can be accessed and state can be modified
+
+(29) Enviromental Vars.: 
+    -> In .env.local: Add Prefix VITE_  (or REACT_APP_ for CRA)to the vars. which you want to expose to client.
+    -> Env. var. can accessed as: {import.meta.env.<Var_Name>} (or process.env. for CRA)
+    -> .env.development.local & .env.production.local can be separately created for specefix modes
+
+.........................................................................................................
+
+ROUTING:
+...........
+
+(30)
