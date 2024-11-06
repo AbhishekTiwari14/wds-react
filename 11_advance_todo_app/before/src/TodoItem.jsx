@@ -13,7 +13,7 @@ export function TodoItem({ id, name, completed }) {
           data-list-item-checkbox
           onChange={(e) => toggleTodo(id, e.target.checked)}
         />
-        {/* <span data-list-item-text>{name}</span> */}
+        <span data-list-item-text>{name}</span>
       </label>
       <button onClick={() => deleteTodo(id)} data-button-delete>
         Delete

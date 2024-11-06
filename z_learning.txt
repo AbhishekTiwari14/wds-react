@@ -340,4 +340,194 @@ Solution: Create global state/context that can be accessed/modified directly by 
 ROUTING:
 ...........
 
-(30)
+(30) routing without a library: using window.location.pathname 
+
+react-router-dom library: 
+
+(31) Creating Routes using createBrowserRouter:
+    In router.jsx: 
+        export const router = createBrowserRouter([
+            { path: "/", element: <Home /> },
+            { path: "/about", element: <About /> },
+        ])
+    
+    and in Navbar.jsx: 
+        <Link to = "/"> Logo <li>
+        <Link to = "/about"> About <li>
+
+(32) Provide router to app:
+    In main.jsx: 
+        <React.StrictMode>
+            /*  <App />  */ (commented)
+            <RouterProvider router={router} />
+        </React.StrictMode>
+
+(33) Nested Routes using nesting(children) + outlet: ex. we have a navbar component which we want to display in 2 pages: /home , /about: 
+    In router.jsx:
+        export const router = createBrowserRouter([
+            {
+                path: "/",
+                element: <NavBar />,
+                children: [
+                    { path: "/", element: <Home /> },
+                    { path: "/about", element: <About /> },
+                ]
+            }
+        ])
+
+    & In NavLayout.jsx:
+        export function NavLayout(){
+            return (
+                <>
+                    <NavBar />
+                    <Outlet /> // placedholder for nested component
+                </Outlet>
+            )
+        }
+
+-> Note: We can pass some data to the nested component as:
+    In NavLayout.jsx: <Outlet context = "Some data from outlet" />
+
+    & In About.jsx: const outletData = useOutletContext()
+                    clog(outletData) // "Some data from outlet"
+
+(34) Absolute & Relative Linking: 
+    -> Absolute: <Link to = "/products/phones" /> => URL: localhost:3000/products/phones 
+    -> Relative: Suppose we are in '/products' page & in this page we have a link:
+                <Link to = "phones"> , => URL: localhost:3000/products/phones, 
+        ie, this route(phones) will be appended to the current route(/products)
+
+-> Active Links: 
+    NavLink gives us {isActive} using which we can highlight the page mentioned in our navbar that we currently are in.
+    <NavLink to="/" className = {({isActive}) => {`bg-blue m-4 p-8 ${isActive? "text-orange-700" : "text-black"} `}} : 
+
+(35) Dynamic Routes(using :prefix): Suppose we have products page which shows list all the products & we want user to redirect to the specefic product page he click on.
+     In router.jsx:
+        export const router = createBrowserRouter([
+            {
+                path: "/products" 
+                element: <Products />,
+                children: [
+                    { path: ":productId", element: <Product /> },
+                ]
+            }
+        ])
+
+    -> This dynamic route can be accessed as:
+        const {productId} = useParams()
+
+    So, in product.jsx:
+        export function Product(){
+            const {productId} = useParams()
+             const product = products.find((product) => product.id === parseInt(productId));
+            return (
+                <div>
+                    <h2>{product.name}</h2>
+                    <p><strong>Price: </strong> {product.bio}</p>
+                    <img src= {product.image} />
+                </div>
+            ) 
+        }
+    
+(36) catchAllRoutes: *
+    -> Navigate Component to redirect to a page when user tries to access some route:
+        ex. router.jsx: when a signedin user tries to access signup page, we redirect him to homepage
+            { path: "/signup", element: <Navigate to="/">  } 
+
+    -> ex. if we want to navigate user to posts page whenever he tries to be in homepage, we can do: 
+
+            {
+                path: "/",
+                element: <RootLayout />,
+                children: [
+                    { index: true, element: <Navigate to="/posts" /> },
+                    { path: "posts", element: <PostList /> },
+                    { path: "users", element: <UserList /> },
+                ]
+            }
+
+    -> useNavigate() hook to navigate user based on some event(ex. button click)
+        ex. In Homepage.jsx: 
+        const navigate = useNavigate()
+        const handleClick = () => {
+            navigate('/profile');
+        };
+        return (
+            <button onClick={handleClick}>Go to Profile</button>
+        );
+
+(37) loader fxn. in router: is used to fetch data before a route component renders.
+    ex. In router.jsx:
+        { path: "/products", 
+          element: <Products />, 
+          loader: ({params, request: {signal}}) => {
+            return fetch('https://placedholderdata.com/products', { signal })
+        }},
+    
+-> the data recieved can be accessed by <Products> component using useLoaderData() hook. 
+-> const {state} = useNavigation() hook can be used to access current state(loading or idle or submitting) of the fetch request.
+    In Products.jsx: 
+        export function Products(){
+            const products = useLoaderData()
+            const { state } = useNavigation()
+
+
+            return (
+                {state == "loading"? ( <h1> Loading...</h1> ) : 
+                 ( <div>
+                    {products.map(() => {code...})}
+                 </div> )}
+            )
+        }
+    
+-> <ScrollRestoration />
+
+(38) Search Params: 
+    -> <Form> Element of react-router-dom: automatically collects form data upon submission.
+    -> Ex., in todos page, we have a list of todos and a searchbar to search/filter todo(s).
+        In router.jsx: 
+        { path: "/todos", element: <Todos>,
+          loader: async({request: {signal, url}}) => {
+            const searchParams = new URL(url).searchParams
+            const todoquery = searchParams.get("todoquery")
+            return { searchParams: {todoquery}, todos: await fetch(`https:jsonplaceholder.data/todos?q=${todoquery}` , { signal })} 
+          } 
+        }
+    & In Todos.jsx:
+        const { searchParams: {todoquery}, todos } = useLoaderData() 
+
+    -> action fxn.: it's typically used for handling mutating operations like form submissions: PUT, POST, DELETE requests, or other changes to server-side data.   
+    Ex. In /newtodo page, we have a form which asks user to enter new todo and on submission, adds this todo to the todos[].
+    In router.jsx:
+        { path: "/newtodo" , element: <NewTodo />,
+          action: async({ request }) => {
+            const formData = await request.formData()
+            const newTodoTitle = formData.get("title")
+            //data validation
+            if(newTodoTitle === "") return "Title is required"
+            const todo = await fetch("https:jsonplaceholder.data/todos", {
+                method: "POST",
+                signal: request.signal,
+                headers: {
+                    "Content-Type" : "application/json", 
+                },
+                body: JSON.stringify({ title: newTodoTitle, completed: false})
+
+            }).then(res => res.json())
+
+            return redirect("/")
+          }
+        }
+
+    -> if the return of action fxn. is not redirect(ie, its some validation error, etc.), we can access it in AddNewTodo.jsx: 
+                    export function AddNewTodo(){
+                        const errorMessage = useActionData()
+                        return (
+                            <>
+                            <Form method = "post"> Code..//form feilds </Form>
+                            </>
+                        )
+                    }
+
+......................................................................................................................................................................................................................
+PART 2/2 -> ADVANCED: 
