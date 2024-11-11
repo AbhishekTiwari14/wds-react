@@ -202,7 +202,7 @@ BASIC HOOKS:
             return data.filter(n => n.includes(query))
         },[query])
     
-    -> Note: It only memoizes the last queried data
+    -> Note: It only memoizes the last queried data 
 
 (21) useCallback Hook: caches fxn. (react recreates all the fxns. on re-renders, so caching a fxn. can be done using this hook). This is useful when passing functions as props to child components.
     -> useCallback(fxn., []);
@@ -531,3 +531,90 @@ react-router-dom library:
 
 ......................................................................................................................................................................................................................
 PART 2/2 -> ADVANCED: 
+
+ADV. REACT CONCEPTS:
+........................
+
+(39) -> createPortal: can be used to render an element outside of its usual DOM position.
+    -> forwardRef: when passing ref to another component/fxn. as a prop, we need to wrap that component/fxn. with forwardRef.
+
+.........................................................................................................
+
+TYPE SAFETY:
+................
+
+(40) propTypes: when not using TS, we get warning whenever we use props. We can use proptypes library to define the proptypes.
+
+...........................................................................................................
+
+(41) Handling large list/array of data: use tanstack library as it improves performance by just rendering the elements of array vidible on the screen
+
+(42) Button -> a: <Button As="a"> Click this link </Button>
+
+...........................................................................................................
+
+TANSTACK / REACT QUERY:
+...........................
+
+(43) is a library to manage async state in react. we can fetch, cache & update data from server using it.
+    Query = Getting data from somewhere, Mutation = Modifying the data
+(44) 
+-> S1: Install: npm i @tanstack/react-query   &   npm i @tanstack/react-query-devtools
+-> S2: Provide react-query to app by wrapping it:
+    In main.tsx: 
+    import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+    const queryClient = new QueryClient()
+    <QueryClientProvider client={queryClient}>
+        <App />
+    </QueryClientProvider>
+
+(45) useQuery() Hook: takes up a 'queryKey' (which is a unique array key) & ''queryFn' which is a fxn. to do data fetching.
+    Ex.: const postsQuery = useQuery({
+            queryKey: ["posts"],
+            queryFn: () => {
+                return axios.get("https://jsonplaceholder.com/posts").then(res => res.data)
+            },
+           //refetchInterval: 1000 //optional => data will be re-fetched every second 
+        })
+    
+(46) useMutation() Hook: takes up a 'mutationFn' using which we modify the data.
+    Ex. adding a new post:
+    const newPostMutation = useMutation({
+        mutationFn: (title) => {
+            return ..code.then(()=> Posts.push({id: crypto.reandomuuid(), title}))
+        }
+    })
+    -> we can use this as : newPostMutation.mutate({});
+
+(47) caching & useQueryClient() hook: when we add a new post using above newPostMutation fxn., it will add new post in Posts array but will not display the new post on UI untill next re-render (by some other state change) due to caching. 
+-> We can update the UI as soon as new post is added to Posts array by doing :
+    const queryClient = useQueryClient()
+    const newPostMutation = useMutation({
+        mutationFn: (title) => {
+            return ..code.then(()=> Posts.push({id: crypto.reandomuuid(), title}))
+        }
+    },
+    onSuccess: () => {
+        queryClient.invalidateQuery(["posts"], {//filters to specefically target particular mutation})
+    })
+
+(48) recommended naming convention for queryKey: 
+     /posts :                       queryKey: ["posts"]
+     /posts/1 (ie, /posts/:post.id):        queryKey: ["posts", post.id]
+     /posts?authorId=1             :        queryKey: ["posts", { authorId: 1}]
+     /posts/2(ie,:post.id)/comments:        queryKey: ["posts", post.id, "comments"]
+
+(48) useQuery() in detail:
+    
+    -> .status & .fetchStatus : while doing data fetching using useQuery();
+        When component Mounts (for the first time): postsQuery.fetchStatus = "fetching" & postsQuery.status = "loading" ; Now, if data has been successfully fetched: .fetchStatus = ""idle , .status = "success"; 
+        Now for further re-mounting/re-fetching of data, .fetchStatus = "fetching" & .status = "success" (ie, it will hold its previous value) & when re-fetching completes: .fetchStatus = "idle" & .status = "success" (or "error" if fetching failed)
+
+    -> enabled key in useQuery can be used to do data fetching from an api1 only if data hs been fetched from api2. 
+
+    -> const {status, data, error} = useQuery({//code here})
+
+(49) useMutation() in detail:
+    -> onMutate fxn is used as a key in useMutation() to set up context and this fxn. is executed before the mutationFn is called
+    -> setQueryData key can be used to manually cache new mutated data so that it renders instantly on the UI
