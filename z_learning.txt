@@ -326,6 +326,12 @@ Solution: Create global state/context that can be accessed/modified directly by 
     (S1) in P: create & export context outside the component: export const ThemeContext = createContext()
 
     (S2) Wrap the P component with ThemeProvider & pass all the data(state, fxn. to change state) in value prop which you want to share: <ThemeProvider.Provider value = {{isDarkMode, toggleTheme}}>P</ThemeProvider>
+    OR return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  )
+}
 
     (S3)  In GC: you can access theses values as: const value = useContext(ThemeContext);
             // now, value.isDarkMode & value.toggleTheme can be accessed and state can be modified
